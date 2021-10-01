@@ -1,0 +1,42 @@
+version: '3'
+services:
+    caddy:
+        image: caddy:latest
+        restart: always
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "10M"
+        network_mode: host
+        volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile
+            - ./Webdata:/www
+        container_name: caddy
+    xray:
+        image: teddysun/xray:latest
+        network_mode: host
+        restart: always
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "10M"
+        volumes:
+            - ./config.json:/etc/xray/config.json
+            - ./tls:/tls
+        container_name: xray
+    acme:
+        image: neilpang/acme.sh:latest
+        restart: always
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "10M"
+        network_mode: host
+        volumes:
+            - ./tls:/tls
+        environment:
+            - CF_Email=aaaaaaaaaaaaa
+            - CF_Key=aaaaaaaaaaaaa
+        command: daemon
+        container_name: acme
+

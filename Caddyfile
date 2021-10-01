@@ -1,0 +1,8 @@
+http://ink.starp.work {
+redir https://ink.starp.work{uri} permanent
+}
+http://ink.starp.work:8080 {
+reverse_proxy * http://127.0.0.1:8888
+#file_server browse
+#root * /www
+}
