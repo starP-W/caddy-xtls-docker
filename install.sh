@@ -45,24 +45,22 @@ SetCF() {
 
 SetCaddy() {
 	read -p "Please Input Your Domain: " FQDN
-	sed -i -E "s|http://[0-9a-zA-Z\-\.]+ \{|http://$FQDN \{|g" ./Caddyfile
-	sed -i -E "s|https://.*\{uri\}|https://$FQDN\{uri\}|g" ./Caddyfile
-	sed -i -E "s|http://[0-9a-zA-Z\-\.]+:8080 \{|http://$FQDN:8080 \{|g" ./Caddyfile
+	sed -i -E "1s|http://[0-9a-zA-Z\-\.]+ \{|http://$FQDN \{|g" ./Caddyfile
+	sed -i -E "2s|https://.*\{uri\}|https://$FQDN\{uri\}|g" ./Caddyfile
+	sed -i -E "4s|http://[0-9a-zA-Z\-\.]+:8080 \{|http://$FQDN:8080 \{|g" ./Caddyfile
 	read -p "Use 1.file_server or 2.reverse_proxy? (Default 1) : " mode
 	case "${mode}" in
 	2)
 		echo "Using reverse_proxy mode"
 		read -p "Please Input Your Proxy URL: " ppppp
-		sed -i "s|^#reverse_proxy|reverse_proxy|g" ./Caddyfile
-		sed -i "s|^file_server|#file_server|g" ./Caddyfile
-		sed -i "s|^root|#root|g" ./Caddyfile
-		sed -i -E "s|reverse_proxy \* .*|reverse_proxy \* $ppppp|g" ./Caddyfile
+		sed -i -E "5,+3s|^#+||g" ./Caddyfile
+		sed -i -E "9,+1s|^|#|g" ./Caddyfile
+		sed -i -E "5s|reverse_proxy \* .*|reverse_proxy \* $ppppp {|g" ./Caddyfile
 		;;
 	*)
 		echo "Using file_server mode"
-		sed -i "s|^reverse_proxy|#reverse_proxy|g" ./Caddyfile
-		sed -i "s|^#file_server|file_server|g" ./Caddyfile
-		sed -i "s|^#root|root|g" ./Caddyfile
+		sed -i -E "5,+3s|^|#|g" ./Caddyfile
+		sed -i -E "9,+1s|^#+||g" ./Caddyfile
 		;;
 	esac
 	ChangeSettings "FQDN" "$FQDN"
