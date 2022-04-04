@@ -6,6 +6,17 @@ Precheck() {
 		echo "Docker or docker-compose not found. "
 		exit 0
 	fi
+	case "${1}" in
+	1)
+		if [ -e tls ]; then
+			# if body
+			rm -rf tls
+		fi
+		;;
+	*) ;;
+
+	esac
+
 	EssentialFiles="tls Webdata Caddyfile .settings config.json docker-compose.yml"
 	for file in $EssentialFiles; do
 		if [ ! -e $file ]; then
@@ -27,7 +38,7 @@ Precheck() {
 }
 
 ChangeSettings() {
-	if [ -z $(grep "$1" ./.settings) ]; then
+	if [ -z "$(grep "$1" ./.settings)" ]; then
 		echo "$1=$2" >>./.settings
 	else
 		sed -i -E "s|$1=.+|$1=$2|g" ./.settings
@@ -163,6 +174,7 @@ ShowLink() {
 }
 
 Update() {
+	Precheck 2
 	imageID=$(docker-compose images | grep $1 | awk '{print $4}')
 	if [ -z $imageID ]; then
 		echo "no running container found"
@@ -185,7 +197,7 @@ Update() {
 }
 
 Install() {
-	Precheck
+	Precheck 1
 	ChangeCF
 	ChangeCaddy
 	ChangeUUID
@@ -195,10 +207,20 @@ Install() {
 	docker exec acme --issue --dns dns_cf -d $FQDN --server letsencrypt
 	docker exec acme --install-cert -d $FQDN --key-file /tls/key.key --fullchain-file /tls/cert.crt
 	docker-compose restart
+	if [ -e "/usr/bin/docker-compose" ]; then
+		DockerComposePath="/usr/bin/docker-compose"
+		echo "0 0 1 * * cd $PWD && $DockerComposePath restart xray" >>/var/spool/cron/crontabs/"$(whoami)"
+	elif [ -e "/usr/local/bin/docker-compose" ]; then
+		DockerComposePath="/usr/local/bin/docker-compose"
+		echo "0 0 1 * * cd $PWD && $DockerComposePath restart xray" >>/var/spool/cron/crontabs/"$(whoami)"
+	fi
+
 	ShowLink
 }
 
 Remove() {
+	Precheck 3
+	sed -i '/caddy-xtls/d' /var/spool/cron/crontabs/"$(whoami)"
 	docker-compose down --rmi all
 }
 

@@ -22,7 +22,7 @@ services:
                 max-size: "10M"
         volumes:
             - ./config.json:/etc/xray/config.json
-            - ./tls:/tls
+            - tlsvolume:/tls
         container_name: xray
     acme:
         image: neilpang/acme.sh:latest
@@ -33,10 +33,12 @@ services:
                 max-size: "10M"
         network_mode: host
         volumes:
-            - ./tls:/tls
+            - tlsvolume:/tls
         environment:
             - CF_Email=aaaaaaaaaaaaa
             - CF_Key=aaaaaaaaaaaaa
         command: daemon
         container_name: acme
 
+volumes:
+    tlsvolume:
