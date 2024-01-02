@@ -9,25 +9,25 @@
             "settings": {
                 "clients": [
                     {
-                        "id": "11111111-1111-1111-1111-35e863d1c6c8",//xtls
-                        "flow": "xtls-rprx-origin",
+                        "id": "11111111-1111-1111-1111-35e863d1c6c8", //xtls
+                        "flow": "xtls-rprx-vision",
                         "level": 0
                     }
                 ],
                 "decryption": "none",
                 "fallbacks": [
                     {
-                        "dest": 8080 // 或者回落到其它也防探测的代理
+                        "dest": 8081, // 或者回落到其它也防探测的代理
+                        "xver":1
                     }
                 ]
             },
             "streamSettings": {
                 "network": "tcp",
-                "security": "xtls",
-                "xtlsSettings": {
-                    "alpn": [
-                        "http/1.1"
-                    ],
+                "security": "tls",
+                "tlsSettings": {
+                    "rejectUnknownSni": true,
+                    "minVersion": "1.2",
                     "certificates": [
                         {
                             "certificateFile": "/tls/cert.crt", // 换成你的证书，绝对路径
@@ -35,12 +35,43 @@
                         }
                     ]
                 }
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls"
+                ]
             }
         }
     ],
     "outbounds": [
         {
             "protocol": "freedom"
+        },
+        {
+            "protocol": "blackhole",
+            "tag": "block"
         }
-    ]
+    ],
+    "routing": {
+        "domainStrategy": "IPOnDemand",
+        "domainMatcher": "hybrid",
+        "rules": [
+            {
+                "type": "field",
+                "domain": [
+                    "geosite:cn"
+                ],
+                "outboundTag": "block"
+            },
+            {
+                "type": "field",
+                "ip": [
+                    "geoip:cn"
+                ],
+                "outboundTag": "block"
+            }
+        ]
+    }
 }

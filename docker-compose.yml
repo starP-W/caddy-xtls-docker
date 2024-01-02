@@ -1,8 +1,9 @@
 version: '3'
 services:
     caddy:
-        image: caddy:latest
-        restart: always
+        build: .
+        image: ghcr.io/starp-w/caddy-with-cf
+        restart: unless-stopped
         logging:
             driver: "json-file"
             options:
@@ -11,11 +12,12 @@ services:
         volumes:
             - ./Caddyfile:/etc/caddy/Caddyfile
             - ./Webdata:/www
-        container_name: caddy
+            - tlsvolume:/caddydata
+        # container_name: caddy
     xray:
         image: teddysun/xray:latest
         network_mode: host
-        restart: always
+        restart: unless-stopped
         logging:
             driver: "json-file"
             options:
@@ -23,22 +25,10 @@ services:
         volumes:
             - ./config.json:/etc/xray/config.json
             - tlsvolume:/tls
-        container_name: xray
-    acme:
-        image: neilpang/acme.sh:latest
-        restart: always
-        logging:
-            driver: "json-file"
-            options:
-                max-size: "10M"
-        network_mode: host
-        volumes:
-            - tlsvolume:/tls
-        environment:
-            - CF_Email=aaaaaaaaaaaaa
-            - CF_Key=aaaaaaaaaaaaa
-        command: daemon
-        container_name: acme
+        # container_name: xray
+        depends_on: 
+            - caddy
+    
 
 volumes:
     tlsvolume:

@@ -1,11 +1,34 @@
-http://aaa.aaa.aaa {
-redir https://aaa.aaa.aaa{uri} permanent
+{
+	admin off
+	auto_https disable_redirects
+	storage file_system /caddydata #/tls/certificates/acme.zerossl.com-v2-dv90/target.site/
+	servers 127.0.0.1:8081 {
+		listener_wrappers {
+			proxy_protocol
+		}
+		protocols h1 h2 h2c h3
+	}
 }
-http://aaa.aaa.aaa:8080 {
-reverse_proxy * http://127.0.0.1:8888 {
-	header_up Host {upstream_hostport}
-	header_up X-Forwarded-Host {host}
+
+:80 {
+	redir * https://{host}{uri} permanent
 }
-#file_server browse
-#root * /www
+
+:8081 {
+	reverse_proxy * {
+		to dest
+		header_up Host {upstream_hostport}
+	}
+	bind 127.0.0.1
+#	root * /www
+#	file_server browse
+}
+https://target.site:8082 {
+	tls {
+		issuer zerossl {
+			email email
+			dns cloudflare cf_api_key
+		}
+	}
+	bind 127.0.0.1
 }
